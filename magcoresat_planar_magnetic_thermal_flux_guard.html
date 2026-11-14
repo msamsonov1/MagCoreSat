@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MagCoreSat | Planar Magnetic Thermal Flux Guard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- MathJax for clean LaTeX rendering of governing equations -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #060b14;
+      color: #e2e8f0;
+    }
+    .font-mono-tech {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-panel {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(9, 14, 26, 0.94));
+      border: 1px solid rgba(56, 189, 248, 0.16);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+    }
+    .glass-panel-subtle {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    input[type="range"] {
+      accent-color: #38bdf8;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-sky-500/30 selection:text-sky-200">
+
+  <!-- Top Telemetry Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/90 bg-slate-950/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <!-- Brand & Classification -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500/20 to-cyan-400/10 border border-sky-400/40 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-0.5">
+            <span class="px-2 py-0.5 text-[11px] font-mono-tech font-semibold tracking-wider uppercase rounded bg-sky-500/15 text-sky-300 border border-sky-400/30">
+              NASA SBIR/STTR DUAL-USE
+            </span>
+            <span class="px-2 py-0.5 text-[11px] font-mono-tech font-semibold tracking-wider uppercase rounded bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
+              TRL-3 → TRL-5
+            </span>
+          </div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">
+            MagCoreSat <span class="text-slate-400 font-normal">| Planar Magnetic Thermal Flux Guard</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Status Pills -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono-tech">
+        <div class="px-3 py-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-3">
+          <span class="text-slate-400">LUNAR DIURNAL:</span>
+          <span id="header-diurnal" class="text-amber-300 font-semibold">LUNAR NOON (120°C)</span>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-3">
+          <span class="text-slate-400">B_SAT MARGIN:</span>
+          <span id="header-margin" class="text-emerald-400 font-semibold">+34.8% (SAFE)</span>
+        </div>
+        <div class="px-3 py-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-3">
+          <span class="text-slate-400">GUARD MODE:</span>
+          <span id="header-guard-badge" class="inline-flex items-center gap-1.5 text-sky-300 font-semibold">
+            <span id="header-guard-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="header-guard-text">ACTIVE BALANCING</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <!-- SECTION 1: INTERACTIVE DIGITAL TWIN & TELEMETRY -->
+    <section class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left 8 Columns: Visual Core Array + Phase Space + Time Series -->
+        <div class="lg:col-span-8 space-y-6">
+
+          <!-- Planar Core Visualization Card -->
+          <div class="glass-panel rounded-2xl p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800/80">
+              <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                <h2 class="text-base sm:text-lg font-bold text-white">
+                  Planar Magnetic Array: N+1 Modular Interleaved Bridge
+                </h2>
+              </div>
+              <span class="text-xs font-mono-tech px-2.5 py-1 rounded-md bg-slate-800/90 text-sky-300 border border-slate-700">
+                High-Freq MnZn Power Ferrite (3C95 / N87 Class)
+              </span>
+            </div>
+
+            <!-- Interactive Canvas for 3-Leg Planar Core Flux & Thermal Distribution -->
+            <div class="relative my-4 rounded-xl overflow-hidden bg-slate-950 border border-slate-800/90">
+              <canvas id="coreCanvas" class="w-full block" style="height: 250px;"></canvas>
+
+              <!-- Dynamic Warning Overlay -->
+              <div id="saturation-alert" class="hidden absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-rose-950/90 border border-rose-500/70 text-rose-200 text-xs font-mono-tech font-semibold flex items-center gap-2 shadow-lg">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                CORE SATURATION RISK: B_pk → B_sat(T)
+              </div>
+            </div>
+
+            <!-- 3 Converter Legs Load & Phase Status -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono-tech text-xs">
+              <div class="p-3 rounded-xl bg-slate-900/85 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-slate-400">LEG A <span id="legA-phase" class="text-sky-400">(0.0°)</span></div>
+                  <div id="legA-flux" class="text-slate-200 font-semibold mt-0.5">B_pk: 0.195 T</div>
+                </div>
+                <span id="legA-load" class="px-2 py-1 rounded bg-sky-500/15 text-sky-300 font-semibold">33.3%</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/85 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-slate-400">LEG B <span id="legB-phase" class="text-sky-400">(120.0°)</span></div>
+                  <div id="legB-flux" class="text-slate-200 font-semibold mt-0.5">B_pk: 0.195 T</div>
+                </div>
+                <span id="legB-load" class="px-2 py-1 rounded bg-sky-500/15 text-sky-300 font-semibold">33.3%</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/85 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div class="text-slate-400">LEG C <span id="legC-phase" class="text-sky-400">(240.0°)</span></div>
+                  <div id="legC-flux" class="text-slate-200 font-semibold mt-0.5">B_pk: 0.195 T</div>
+                </div>
+                <span id="legC-load" class="px-2 py-1 rounded bg-sky-500/15 text-sky-300 font-semibold">33.3%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- State Vector Phase-Space Chart -->
+          <div class="glass-panel rounded-2xl p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-base font-bold text-white">
+                  State Vector Phase-Space: Operational Flux ($B_{pk}$) vs. Core Temp ($T_{core}$)
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">
+                  MnZn ferrite saturation ceiling $B_{sat}(T)$ drops ~45% from $0.52\,\text{T}$ at $-50^\circ\text{C}$ down to $0.28\,\text{T}$ at $145^\circ\text{C}$ ($T_c \approx 220^\circ\text{C}$).
+                </p>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 text-xs font-mono-tech shrink-0">
+                <span class="inline-flex items-center gap-1.5 text-rose-300">
+                  <span class="w-3 h-0.5 bg-rose-400 inline-block"></span> $B_{sat}(T)$ Collapse Curve
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-emerald-300">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span> State $(B_{pk}, T_{core})$
+                </span>
+              </div>
+            </div>
+            <div class="rounded-xl bg-slate-950 border border-slate-800/90 p-2">
+              <canvas id="phaseSpaceCanvas" class="w-full block" style="height: 220px;"></canvas>
+            </div>
+          </div>
+
+          <!-- Dual Bottom Charts -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-panel rounded-2xl p-5">
+              <h4 class="text-sm font-bold text-white mb-3">
+                Core Temp &amp; Lunar Ambient Profile ($T$)
+              </h4>
+              <div class="rounded-xl bg-slate-950 border border-slate-800/90 p-2">
+                <canvas id="tempProfileCanvas" class="w-full block" style="height: 170px;"></canvas>
+              </div>
+            </div>
+            <div class="glass-panel rounded-2xl p-5">
+              <h4 class="text-sm font-bold text-white mb-3">
+                Peak Leg Flux vs. Active Interleave Trim ($\Delta\phi$)
+              </h4>
+              <div class="rounded-xl bg-slate-950 border border-slate-800/90 p-2">
+                <canvas id="fluxShiftCanvas" class="w-full block" style="height: 170px;"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right 4 Columns: Closed-Loop Control & Observer State Vector -->
+        <div class="lg:col-span-4 space-y-6">
+
+          <!-- Closed-Loop Controls -->
+          <div class="glass-panel rounded-2xl p-5 sm:p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3.5">
+              <h3 class="text-base font-bold text-white">Closed-Loop Control</h3>
+              <button id="toggleGuardBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-mono-tech font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 transition">
+                GUARD: ON
+              </button>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Dynamic volt-second &amp; current-sharing trim across parallel planar legs prevents DC flux bias and localized core hot-spots near $B_{sat}(T)$.
+            </p>
+
+            <!-- Slider 1: Ambient Temp -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-mono-tech">
+                <span class="text-slate-300">Lunar Surface Ambient ($T_{amb}$):</span>
+                <span id="val-temp" class="text-amber-300 font-semibold">120°C</span>
+              </div>
+              <input id="slider-temp" type="range" min="-50" max="135" value="120" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] font-mono-tech text-slate-500">
+                <span>-50°C (Dawn)</span>
+                <span>+40°C</span>
+                <span>+135°C (Zenith)</span>
+              </div>
+            </div>
+
+            <!-- Slider 2: Power Load -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-mono-tech">
+                <span class="text-slate-300">PMAD Converter Load ($P_{out}$):</span>
+                <span id="val-power" class="text-sky-300 font-semibold">48.0 kW</span>
+              </div>
+              <input id="slider-power" type="range" min="10" max="75" value="48" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] font-mono-tech text-slate-500">
+                <span>10 kW (Base)</span>
+                <span>40 kW (Nominal)</span>
+                <span>75 kW (Peak)</span>
+              </div>
+            </div>
+
+            <!-- Slider 3: Switching Frequency -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-mono-tech">
+                <span class="text-slate-300">Switching Frequency ($f_{sw}$):</span>
+                <span id="val-freq" class="text-cyan-300 font-semibold">250 kHz</span>
+              </div>
+              <input id="slider-freq" type="range" min="100" max="500" step="10" value="250" class="w-full cursor-pointer" />
+              <div class="flex justify-between text-[11px] font-mono-tech text-slate-500">
+                <span>100 kHz</span>
+                <span>250 kHz</span>
+                <span>500 kHz</span>
+              </div>
+            </div>
+
+            <!-- Stress Scenarios / Fault Injections -->
+            <div class="pt-2 border-t border-slate-800 space-y-2.5">
+              <span class="block text-xs font-mono-tech text-slate-400">Stress Scenarios / Fault Injections:</span>
+              <div class="grid grid-cols-1 gap-2">
+                <button id="btn-scenario-noon" type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono-tech bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition flex items-center justify-between">
+                  <span>1. Lunar Noon Nominal (120°C / 48 kW)</span>
+                  <span class="text-sky-400">LOAD</span>
+                </button>
+                <button id="btn-scenario-imbalance" type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono-tech bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-200 transition flex items-center justify-between">
+                  <span>2. Inject Leg-A Thermal &amp; Flux Imbalance</span>
+                  <span class="text-amber-400">INJECT</span>
+                </button>
+                <button id="btn-scenario-surge" type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-mono-tech bg-slate-900 hover:bg-slate-800 border border-rose-500/40 text-rose-200 transition flex items-center justify-between">
+                  <span>3. Zenith Surge (135°C / 72 kW Step)</span>
+                  <span class="text-rose-400">STRESS</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Observer State Vector Telemetry Card -->
+          <div class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h4 class="text-sm font-bold text-white">Observer State Vector $(B, T)$</h4>
+              <span class="text-[11px] font-mono-tech text-sky-400">EKF @ 20 kHz</span>
+            </div>
+
+            <div class="space-y-2.5 text-xs font-mono-tech">
+              <div class="flex justify-between py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">Core Peak Temp ($T_{core}$):</span>
+                <span id="obs-tcore" class="text-amber-300 font-semibold">134.8 °C</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">Collapse Limit $B_{sat}(T)$:</span>
+                <span id="obs-bsat" class="text-rose-300 font-semibold">0.298 T</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">Peak Operating Flux ($B_{pk}$):</span>
+                <span id="obs-bop" class="text-sky-300 font-semibold">0.194 T</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">Volumetric Core Loss ($P_v$):</span>
+                <span id="obs-pv" class="text-slate-200 font-semibold">168 kW/m³</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">Active Phase/Duty Trim ($\Delta\phi$):</span>
+                <span id="obs-dphi" class="text-cyan-300 font-semibold">±4.2° (Balanced)</span>
+              </div>
+
+              <!-- Margin Progress Bar -->
+              <div class="pt-2 space-y-1.5">
+                <div class="flex justify-between">
+                  <span class="text-slate-300">Core Flux Headroom Margin:</span>
+                  <span id="obs-margin-pct" class="text-emerald-400 font-bold">34.9%</span>
+                </div>
+                <div class="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden border border-slate-800">
+                  <div id="obs-margin-bar" class="h-full bg-emerald-400 transition-all duration-200" style="width: 65%;"></div>
+                </div>
+              </div>
+
+              <!-- Status Callout -->
+              <div id="obs-status-box" class="mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 leading-relaxed">
+                THERMAL FLUX GUARD NOMINAL: Multi-leg volt-second balancing active; zero DC flux walk.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: ELECTROMAGNETIC & THERMODYNAMIC GOVERNING FORMULATIONS -->
+    <section class="space-y-6">
+      <div class="border-b border-slate-800 pb-4">
+        <h2 class="text-xl sm:text-2xl font-bold text-white">
+          Electromagnetic &amp; Thermodynamic Governing Formulations
+        </h2>
+        <p class="text-sm text-slate-400 mt-1 max-w-4xl">
+          Reduced-order physical models implemented inside the real-time Extended Kalman Filter (EKF) to track high-temperature permeability roll-off, modified Steinmetz dissipation, and multiphase flux balancing in vacuum.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Card 1 -->
+        <div class="glass-panel rounded-2xl p-6 space-y-3">
+          <h3 class="text-base font-bold text-sky-300">1. Temperature-Dependent Flux Saturation (MnZn Ferrite)</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            In high-frequency MnZn power ferrites (e.g., 3C95 / N87 class used in compact 100–500 kHz planar transformers), spontaneous magnetization collapses sharply as core temperature approaches the Curie point ($T_c \approx 220^\circ\text{C}$):
+          </p>
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 text-center overflow-x-auto text-sm">
+            $$B_{sat}(T) = B_{0}\left(1 - \frac{T + 273.15}{T_c + 273.15}\right)^\beta$$
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            With $B_0 \approx 0.64\,\text{T}$ and critical exponent $\beta \approx 0.42$, $B_{sat}$ drops from $0.52\,\text{T}$ at $-50^\circ\text{C}$ to <strong>$0.28\,\text{T}$ at $145^\circ\text{C}$</strong> (~46% reduction). Static designs sized at room temperature saturate immediately at lunar noon.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass-panel rounded-2xl p-6 space-y-3">
+          <h3 class="text-base font-bold text-sky-300">2. Thermal Steinmetz Core Dissipation</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            Volumetric core loss $P_v$ scales non-linearly with flux swing $\Delta B$, switching frequency $f_{sw}$, and temperature. Above the ferrite loss minimum (~$80^\circ\text{C}–95^\circ\text{C}$), positive thermal feedback accelerates heating:
+          </p>
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 text-center overflow-x-auto text-sm">
+            $$P_v(T, \Delta B) = k \cdot f_{sw}^\alpha \cdot \left(\frac{\Delta B}{2}\right)^\gamma \cdot \left(c_0 - c_1 T + c_2 T^2\right)$$
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            In lunar vacuum, there is zero convective cooling. If core loss rises faster than baseplate conduction can reject heat, $T_{core}$ climbs toward $T_c$, collapsing $B_{sat}(T)$ and triggering hard-switching shoot-through.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass-panel rounded-2xl p-6 space-y-3">
+          <h3 class="text-base font-bold text-sky-300">3. Active Interleave Flux &amp; Thermal Balancing</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            When the observer detects diminishing margin $M_k(t) = B_{sat}(T_k) - B_{pk,k}(t)$ or leg-to-leg thermal drift, the controller trims per-leg duty $D_k$ and phase angle $\phi_k$ across $N$ parallel legs (plus N+1 hot-spare rotation under extreme zenith heat):
+          </p>
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 text-center overflow-x-auto text-sm">
+            $$B_{pk,k} = \frac{V_{in} \cdot \left(D_k + \Delta D_k\right)}{2 N_{turn} A_c f_{sw}} + B_{dc,k}(\Delta \phi_k)$$
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Eliminating volt-second imbalance ($B_{dc,k} \to 0$) and shifting current away from thermally stressed legs prevents single-leg saturation without requiring 2×–3× oversized magnetic core mass.
+          </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="glass-panel rounded-2xl p-6 space-y-3">
+          <h3 class="text-base font-bold text-sky-300">4. Lunar Surface Vacuum Heat Rejection</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            Because lunar regolith is an extreme thermal insulator ($k_{reg} \approx 0.002\,\text{W/m}\cdot\text{K}$), planar transformer losses must conduct into a coldplate and reject via zenith-facing radiators:
+          </p>
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 text-center overflow-x-auto text-sm">
+            $$C_{th} \frac{dT_{core}}{dt} = P_{core}(B, T) + P_{cu}(I) - \frac{T_{core} - T_{rad}}{R_{cond}} - \varepsilon \sigma_{SB} A_{rad} \left(T_{rad}^4 - T_{sink}^4\right)$$
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            By safely operating magnetics closer to their thermal ceiling with guaranteed flux-margin protection, MagCoreSat reduces radiator area and core mass penalties for lunar surface PMAD substations.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: NASA PHASE I SBIR/STTR PROJECT PLAN -->
+    <section class="glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+          <span class="inline-block px-2.5 py-1 rounded text-xs font-mono-tech font-semibold bg-sky-500/15 text-sky-300 border border-sky-400/30 mb-2">
+            NASA Technology Taxonomy: TX03.02 — Surface Power Management &amp; Distribution (PMAD)
+          </span>
+          <h2 class="text-xl sm:text-2xl font-bold text-white">
+            NASA Phase I SBIR/STTR Concept Plan: MagCoreSat Flight Guard
+          </h2>
+        </div>
+        <div class="md:text-right shrink-0">
+          <div class="text-2xl font-bold font-mono-tech text-emerald-400">$150,000</div>
+          <div class="text-xs font-mono-tech text-slate-400">Phase I Period: 6 Mo (SBIR) / 13 Mo (STTR)</div>
+        </div>
+      </div>
+
+      <!-- Allocation Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-800 space-y-1.5">
+          <span class="text-[11px] font-mono-tech text-sky-400 uppercase">Small Business Lead (70%)</span>
+          <div class="text-lg font-bold font-mono-tech text-white">$105,000</div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            System architecture, embedded C2000/FPGA Kalman flux-observer firmware, active phase/duty trim control loops, and benchtop converter integration.
+          </p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-800 space-y-1.5">
+          <span class="text-[11px] font-mono-tech text-cyan-400 uppercase">Proposed STTR Research Partner (30%)</span>
+          <div class="text-lg font-bold font-mono-tech text-white">$45,000</div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            University thermal-vacuum chamber testing (e.g., UCF CATER or equivalent aerospace power lab) for high-temp $B$-$H$ loop &amp; core loss characterization.
+          </p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-800 space-y-1.5">
+          <span class="text-[11px] font-mono-tech text-emerald-400 uppercase">Phase II Transition Target</span>
+          <div class="text-lg font-bold font-mono-tech text-white">$850,000</div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            50 kW radiation-tolerant multiphase planar DC-DC converter prototype validated under simulated lunar diurnal thermal-vacuum cycling.
+          </p>
+        </div>
+      </div>
+
+      <!-- 4 Milestones -->
+      <div class="space-y-3 pt-2">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono-tech">
+          Phase I Technical Work Breakdown Structure
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 flex gap-3.5">
+            <div class="px-2.5 py-1 h-fit rounded bg-sky-500/15 text-sky-300 font-mono-tech text-xs font-bold shrink-0">M1</div>
+            <div>
+              <h4 class="text-sm font-bold text-white">High-Temp Core $B_{sat}(T)$ &amp; Loss Mapping</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Characterize planar MnZn ferrite and nanocrystalline cores from $-50^\circ\text{C}$ to $+150^\circ\text{C}$ to parameterize $B_{sat}(T)$ and Steinmetz lookup tables.
+              </p>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 flex gap-3.5">
+            <div class="px-2.5 py-1 h-fit rounded bg-sky-500/15 text-sky-300 font-mono-tech text-xs font-bold shrink-0">M2</div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Real-Time $(B_t, T_t)$ Observer Firmware</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Implement discrete EKF state estimation on TI C2000 DSP using primary/secondary volt-second integration, current sense, and RTDs—requiring zero air-gap Hall probes.
+              </p>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 flex gap-3.5">
+            <div class="px-2.5 py-1 h-fit rounded bg-sky-500/15 text-sky-300 font-mono-tech text-xs font-bold shrink-0">M3</div>
+            <div>
+              <h4 class="text-sm font-bold text-white">10 kW Multiphase GaN Benchtop Demonstration</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Demonstrate closed-loop flux balancing under forced $130^\circ\text{C}$ baseplate heating and step-load transients, preventing core saturation while maintaining $&lt;1\%$ bus regulation.
+              </p>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/90 flex gap-3.5">
+            <div class="px-2.5 py-1 h-fit rounded bg-sky-500/15 text-sky-300 font-mono-tech text-xs font-bold shrink-0">M4</div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Artemis Lunar PMAD Scaling Roadmap</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Deliver mass/volume trade study comparing passive core oversizing vs. active MagCoreSat control for 50 kW–1 MW lunar surface power distribution nodes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: DUAL-USE COMMERCIAL APPLICATIONS -->
+    <section class="space-y-6">
+      <div class="border-b border-slate-800 pb-4">
+        <span class="text-xs font-mono-tech text-cyan-400 uppercase tracking-wider">Dual-Use Commercialization Path</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-white mt-1">
+          Terrestrial High-Density Power Electronics Pull
+        </h2>
+        <p class="text-sm text-slate-400 mt-1 max-w-4xl">
+          The same firmware IP that protects lunar planar transformers against midday thermal saturation directly addresses high-temperature derating in commercial wide-bandgap (SiC/GaN) power converters.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-panel-subtle rounded-2xl p-5 space-y-2">
+          <h4 class="text-sm font-bold text-white">1. 800V AI Data Center Power Supply Units (GaN Planar)</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Thermal Bottleneck:</strong> High-density 800V-to-48V server rack converters run planar cores above $105^\circ\text{C}$. Sudden GPU compute load steps can push hot cores across $B_{sat}(T)$, causing switch failure.
+          </p>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>MagCoreSat Advantage:</strong> Firmware-only flux headroom guard enables full-power transient ride-through without adding bulky heatsinks or derating rack density.
+          </p>
+        </div>
+
+        <div class="glass-panel-subtle rounded-2xl p-5 space-y-2">
+          <h4 class="text-sm font-bold text-white">2. Megawatt EV Fast Chargers (350 kW–1 MW DCFC)</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Thermal Bottleneck:</strong> In $45^\circ\text{C}+$ desert ambient conditions, internal transformer temperatures exceed $115^\circ\text{C}$, reducing saturation margin by &gt;25% during continuous fleet charging.
+          </p>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>MagCoreSat Advantage:</strong> Active multi-leg flux balancing prevents saturation trips and reduces liquid-cooling mass per charger cabinet.
+          </p>
+        </div>
+
+        <div class="glass-panel-subtle rounded-2xl p-5 space-y-2">
+          <h4 class="text-sm font-bold text-white">3. Commercial LEO/GEO Satellite Power Conditioning</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Thermal Bottleneck:</strong> Rapid eclipse-to-sunlight thermal gradients impose severe $\Delta T$ swings on spacecraft EPS DC-DC converters, traditionally forcing 2×–3× magnetic core mass margins.
+          </p>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>MagCoreSat Advantage:</strong> Real-time $(B, T)$ state estimation trims transformer mass and volume while preserving single-fault tolerance.
+          </p>
+        </div>
+
+        <div class="glass-panel-subtle rounded-2xl p-5 space-y-2">
+          <h4 class="text-sm font-bold text-white">4. Utility Solar &amp; Grid-Forming BESS Inverters</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Thermal Bottleneck:</strong> Peak solar generation coincides with peak afternoon cabinet temperatures, forcing thermal power curtailment to protect magnetic filter stages.
+          </p>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>MagCoreSat Advantage:</strong> Dynamic phase/duty balancing extends peak-temperature operating envelopes without hardware redesign.
+          </p>
+        </div>
+      </div>
+
+      <!-- Contact Footer Card -->
+      <div class="glass-panel rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h4 class="text-base font-bold text-white">Technical Collaboration &amp; NASA SBIR/STTR Inquiries</h4>
+          <p class="text-xs text-slate-400 mt-1">
+            Contact RF WaveCode regarding lunar PMAD modeling, hardware-in-the-loop validation, and Phase I/II transition alignment:
+          </p>
+        </div>
+        <a href="mailto:support@rfwavecode.com" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono-tech text-xs font-bold transition shrink-0">
+          support@rfwavecode.com
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Interactive Physics & Control State for MagCoreSat Digital Twin
+    const state = {
+      tAmb: 120,          // °C (-50 to 135)
+      pOut: 48,           // kW (10 to 75)
+      fSw: 250,           // kHz (100 to 500)
+      guardActive: true,
+      imbalanceInjected: false,
+      tick: 0
+    };
+
+    // DOM Elements
+    const sliderTemp = document.getElementById('slider-temp');
+    const sliderPower = document.getElementById('slider-power');
+    const sliderFreq = document.getElementById('slider-freq');
+    const toggleGuardBtn = document.getElementById('toggleGuardBtn');
+
+    // MnZn Power Ferrite Saturation Model: B_sat(T) = B0 * (1 - T_K / Tc_K)^beta
+    // Calibrated so B_sat(-50°C) ≈ 0.52T, B_sat(25°C) ≈ 0.45T, B_sat(145°C) ≈ 0.28T (Tc = 220°C)
+    function computeBsat(tempC) {
+      const Tc = 220.0;
+      if (tempC >= Tc - 2) return 0.04;
+      const B0 = 0.65;
+      const beta = 0.42;
+      const ratio = Math.max(0.01, 1 - (tempC + 273.15) / (Tc + 273.15));
+      return B0 * Math.pow(ratio, beta);
+    }
+
+    // Compute Operating Metrics
+    function computeTelemetry() {
+      // Base core temperature rise above lunar ambient due to power & frequency
+      const freqFactor = Math.pow(state.fSw / 250, 0.65);
+      const loadFactor = Math.pow(state.pOut / 48, 1.15);
+      const baseTempRise = 14.5 * loadFactor * freqFactor;
+      const imbalanceTempBoost = (state.imbalanceInjected && !state.guardActive) ? 14.0 : (state.imbalanceInjected ? 3.5 : 0);
+      const tCore = state.tAmb + baseTempRise + imbalanceTempBoost;
+
+      const bSat = computeBsat(tCore);
+
+      // Peak operating flux B_pk inversely scales with frequency, proportional to power/volt-seconds
+      let baseBpk = 0.194 * (state.pOut / 48) * (250 / state.fSw);
+
+      // Leg distribution
+      let legShares = [33.3, 33.3, 33.3];
+      let legPhases = [0.0, 120.0, 240.0];
+      let legBpk = [baseBpk, baseBpk, baseBpk];
+      let dPhiText = "±2.1° (Balanced)";
+
+      if (state.imbalanceInjected) {
+        if (state.guardActive) {
+          // Guard actively trims duty/phase to offload hot Leg A onto Legs B & C
+          legShares = [25.0, 37.5, 37.5];
+          legPhases = [0.0, 114.5, 234.5];
+          legBpk = [baseBpk * 0.82, baseBpk * 1.06, baseBpk * 1.06];
+          dPhiText = "-5.5° Trim (Active)";
+        } else {
+          // Uncompensated DC flux offset + thermal imbalance on Leg A
+          legShares = [44.0, 28.0, 28.0];
+          legPhases = [0.0, 120.0, 240.0];
+          legBpk = [baseBpk * 1.42, baseBpk * 0.86, baseBpk * 0.86];
+          dPhiText = "0.0° (Locked / Drift)";
+        }
+      } else if (state.guardActive && (tCore > 115 || state.pOut > 60)) {
+        // Active volt-second trim keeps all legs tightly equalized near thermal ceiling
+        legBpk = [baseBpk * 0.96, baseBpk * 0.96, baseBpk * 0.96];
+        dPhiText = "±4.2° (Active Trim)";
+      } else if (!state.guardActive) {
+        // Natural tolerance drift without closed-loop trim
+        legShares = [36.5, 32.0, 31.5];
+        legBpk = [baseBpk * 1.12, baseBpk * 0.96, baseBpk * 0.94];
+        dPhiText = "0.0° (Open-Loop)";
+      }
+
+      const maxBpk = Math.max(...legBpk);
+      const marginPct = ((bSat - maxBpk) / bSat) * 100;
+
+      // Volumetric Steinmetz core loss (kW/m^3)
+      const tempLossMult = 1 + 0.00018 * Math.pow(Math.max(0, tCore - 85), 2);
+      const pv = 168 * Math.pow(state.fSw / 250, 1.35) * Math.pow(maxBpk / 0.194, 2.2) * tempLossMult;
+
+      return {
+        tCore,
+        bSat,
+        maxBpk,
+        legShares,
+        legPhases,
+        legBpk,
+        marginPct,
+        pv,
+        dPhiText
+      };
+    }
+
+    function updateUI() {
+      const m = computeTelemetry();
+
+      // Update slider labels
+      document.getElementById('val-temp').textContent = `${state.tAmb}°C`;
+      document.getElementById('val-power').textContent = `${state.pOut.toFixed(1)} kW`;
+      document.getElementById('val-freq').textContent = `${state.fSw} kHz`;
+
+      // Header pills
+      let diurnalLabel = "LUNAR DAY (+40°C)";
+      if (state.tAmb <= -10) diurnalLabel = `LUNAR DAWN (${state.tAmb}°C)`;
+      else if (state.tAmb >= 100) diurnalLabel = `LUNAR NOON (${state.tAmb}°C)`;
+      else diurnalLabel = `MID-MORNING (${state.tAmb}°C)`;
+      document.getElementById('header-diurnal').textContent = diurnalLabel;
+
+      const headerMargin = document.getElementById('header-margin');
+      const satAlert = document.getElementById('saturation-alert');
+      if (m.marginPct < 10) {
+        headerMargin.textContent = `${m.marginPct.toFixed(1)}% (CRITICAL)`;
+        headerMargin.className = "text-rose-400 font-semibold";
+        satAlert.classList.remove('hidden');
+      } else if (m.marginPct < 22) {
+        headerMargin.textContent = `+${m.marginPct.toFixed(1)}% (TIGHT)`;
+        headerMargin.className = "text-amber-300 font-semibold";
+        satAlert.classList.add('hidden');
+      } else {
+        headerMargin.textContent = `+${m.marginPct.toFixed(1)}% (SAFE)`;
+        headerMargin.className = "text-emerald-400 font-semibold";
+        satAlert.classList.add('hidden');
+      }
+
+      // Guard button & header indicator
+      const guardDot = document.getElementById('header-guard-dot');
+      const guardText = document.getElementById('header-guard-text');
+      if (state.guardActive) {
+        toggleGuardBtn.textContent = "GUARD: ON";
+        toggleGuardBtn.className = "px-3 py-1.5 rounded-lg text-xs font-mono-tech font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 transition";
+        guardDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+        guardText.textContent = "ACTIVE BALANCING";
+        guardText.className = "text-sky-300 font-semibold";
+      } else {
+        toggleGuardBtn.textContent = "GUARD: BYPASSED";
+        toggleGuardBtn.className = "px-3 py-1.5 rounded-lg text-xs font-mono-tech font-semibold bg-rose-500/20 text-rose-300 border border-rose-400/40 hover:bg-rose-500/30 transition";
+        guardDot.className = "w-2 h-2 rounded-full bg-rose-400";
+        guardText.textContent = "OPEN-LOOP (UNPROTECTED)";
+        guardText.className = "text-rose-300 font-semibold";
+      }
+
+      // Leg cards
+      document.getElementById('legA-phase').textContent = `(${m.legPhases[0].toFixed(1)}°)`;
+      document.getElementById('legB-phase').textContent = `(${m.legPhases[1].toFixed(1)}°)`;
+      document.getElementById('legC-phase').textContent = `(${m.legPhases[2].toFixed(1)}°)`;
+
+      document.getElementById('legA-flux').textContent = `B_pk: ${m.legBpk[0].toFixed(3)} T`;
+      document.getElementById('legB-flux').textContent = `B_pk: ${m.legBpk[1].toFixed(3)} T`;
+      document.getElementById('legC-flux').textContent = `B_pk: ${m.legBpk[2].toFixed(3)} T`;
+
+      document.getElementById('legA-load').textContent = `${m.legShares[0].toFixed(1)}%`;
+      document.getElementById('legB-load').textContent = `${m.legShares[1].toFixed(1)}%`;
+      document.getElementById('legC-load').textContent = `${m.legShares[2].toFixed(1)}%`;
+
+      // Observer Telemetry
+      document.getElementById('obs-tcore').textContent = `${m.tCore.toFixed(1)} °C`;
+      document.getElementById('obs-bsat').textContent = `${m.bSat.toFixed(3)} T`;
+      document.getElementById('obs-bop').textContent = `${m.maxBpk.toFixed(3)} T`;
+      document.getElementById('obs-pv').textContent = `${Math.round(m.pv)} kW/m³`;
+      document.getElementById('obs-dphi').textContent = m.dPhiText;
+
+      const clampedMargin = Math.max(0, Math.min(100, m.marginPct));
+      const marginPctEl = document.getElementById('obs-margin-pct');
+      const marginBarEl = document.getElementById('obs-margin-bar');
+      const statusBoxEl = document.getElementById('obs-status-box');
+
+      marginPctEl.textContent = `${m.marginPct.toFixed(1)}%`;
+      marginBarEl.style.width = `${Math.min(100, clampedMargin * 1.6)}%`;
+
+      if (m.marginPct < 10) {
+        marginPctEl.className = "text-rose-400 font-bold";
+        marginBarEl.className = "h-full bg-rose-500 transition-all duration-200";
+        statusBoxEl.className = "mt-3 p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-200 leading-relaxed";
+        statusBoxEl.textContent = "SATURATION WARNING: B_pk approaching B_sat(T). Enable Thermal Flux Guard or reduce load.";
+      } else if (m.marginPct < 22) {
+        marginPctEl.className = "text-amber-300 font-bold";
+        marginBarEl.className = "h-full bg-amber-400 transition-all duration-200";
+        statusBoxEl.className = "mt-3 p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 leading-relaxed";
+        statusBoxEl.textContent = "ELEVATED THERMAL STRESS: Guard actively trimming volt-seconds to preserve flux headroom.";
+      } else {
+        marginPctEl.className = "text-emerald-400 font-bold";
+        marginBarEl.className = "h-full bg-emerald-400 transition-all duration-200";
+        statusBoxEl.className = "mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 leading-relaxed";
+        statusBoxEl.textContent = "THERMAL FLUX GUARD NOMINAL: Multi-leg volt-second balancing active; zero DC flux walk.";
+      }
+
+      drawPhaseSpace(m);
+      drawTempProfile(m);
+      drawFluxShift(m);
+    }
+
+    // Helper for crisp HiDPI Canvas sizing
+    function prepCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    // 1. Animated Planar 3-Leg Core Canvas
+    function drawCoreAnimation() {
+      const canvas = document.getElementById('coreCanvas');
+      if (!canvas) return;
+      const { ctx, w, h } = prepCanvas(canvas);
+      const m = computeTelemetry();
+      state.tick += 0.04;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Subtle background grid
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 28) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 28) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      // Planar E-I Core Outer Frame
+      const coreW = Math.min(w * 0.72, 540);
+      const coreH = 156;
+      const startX = (w - coreW) / 2;
+      const startY = (h - coreH) / 2;
+
+      // Core thermal glow based on T_core
+      const heatRatio = Math.max(0, Math.min(1, (m.tCore - 20) / 140));
+      const rCol = Math.round(56 + heatRatio * 190);
+      const gCol = Math.round(189 - heatRatio * 120);
+      const bCol = Math.round(248 - heatRatio * 180);
+
+      ctx.strokeStyle = `rgba(${rCol}, ${gCol}, ${bCol}, 0.75)`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(startX, startY, coreW, coreH);
+
+      // Three Planar Winding Legs
+      const legLabels = ['LEG A', 'LEG B', 'LEG C'];
+      for (let i = 0; i < 3; i++) {
+        const legX = startX + (coreW / 4) * (i + 1);
+        const phaseRad = (m.legPhases[i] * Math.PI) / 180;
+        const fluxWave = Math.sin(state.tick * 2.2 - phaseRad);
+        const saturationRatio = m.legBpk[i] / m.bSat;
+
+        // Core Post
+        ctx.fillStyle = saturationRatio > 0.9 ? 'rgba(244, 63, 94, 0.25)' : 'rgba(30, 41, 59, 0.9)';
+        ctx.fillRect(legX - 18, startY + 6, 36, coreH - 12);
+
+        // Planar Copper Spiral Turns
+        const turns = 5;
+        for (let t = 0; t < turns; t++) {
+          const ty = startY + 26 + t * 24;
+          const intensity = 0.45 + 0.5 * Math.abs(fluxWave);
+          ctx.strokeStyle = saturationRatio > 0.9
+            ? `rgba(251, 113, 133, ${intensity})`
+            : `rgba(56, 189, 248, ${intensity})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.roundRect(legX - 34, ty, 68, 12, 4);
+          ctx.stroke();
+        }
+
+        // Animated Flux Arrows
+        const arrowY = startY + coreH / 2 + fluxWave * 36;
+        ctx.fillStyle = saturationRatio > 0.9 ? '#fb7185' : '#34d399';
+        ctx.beginPath();
+        ctx.arc(legX, arrowY, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Label
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '600 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${legLabels[i]} (${m.legBpk[i].toFixed(2)}T)`, legX, startY - 10);
+      }
+
+      requestAnimationFrame(drawCoreAnimation);
+    }
+
+    // 2. Phase-Space Chart: B_sat(T) Collapse Curve vs Active State Point
+    function drawPhaseSpace(m) {
+      const canvas = document.getElementById('phaseSpaceCanvas');
+      if (!canvas) return;
+      const { ctx, w, h } = prepCanvas(canvas);
+      ctx.clearRect(0, 0, w, h);
+
+      const pad = { l: 48, r: 20, t: 18, b: 30 };
+      const cw = w - pad.l - pad.r;
+      const ch = h - pad.t - pad.b;
+
+      const tMin = -60, tMax = 180;
+      const bMin = 0.0, bMax = 0.60;
+
+      const xMap = t => pad.l + ((t - tMin) / (tMax - tMin)) * cw;
+      const yMap = b => pad.t + ch - ((b - bMin) / (bMax - bMin)) * ch;
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+      ctx.lineWidth = 1;
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#64748b';
+
+      for (let b = 0.1; b <= 0.6; b += 0.1) {
+        const y = yMap(b);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+        ctx.textAlign = 'right';
+        ctx.fillText(`${b.toFixed(1)}T`, pad.l - 6, y + 3);
+      }
+      for (let t = -40; t <= 160; t += 40) {
+        const x = xMap(t);
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.fillText(`${t}°C`, x, h - 10);
+      }
+
+      // Shaded Hazard Zone above B_sat(T)
+      ctx.beginPath();
+      for (let t = tMin; t <= tMax; t += 4) {
+        const x = xMap(t);
+        const y = yMap(computeBsat(t));
+        if (t === tMin) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.lineTo(xMap(tMax), pad.t);
+      ctx.lineTo(xMap(tMin), pad.t);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
+      ctx.fill();
+
+      // B_sat(T) Curve
+      ctx.beginPath();
+      for (let t = tMin; t <= tMax; t += 2) {
+        const x = xMap(t);
+        const y = yMap(computeBsat(t));
+        if (t === tMin) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#fb7185';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Operating Point
+      const opX = xMap(Math.min(tMax, Math.max(tMin, m.tCore)));
+      const opY = yMap(Math.min(bMax, Math.max(bMin, m.maxBpk)));
+
+      // Vertical headroom line between B_pk and B_sat(T)
+      const satY = yMap(m.bSat);
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = m.marginPct < 10 ? '#fb7185' : '#34d399';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(opX, opY); ctx.lineTo(opX, satY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point Glow
+      ctx.fillStyle = m.marginPct < 10 ? '#fb7185' : '#34d399';
+      ctx.beginPath();
+      ctx.arc(opX, opY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.textAlign = opX > w - 120 ? 'right' : 'left';
+      ctx.fillText(`(${m.tCore.toFixed(0)}°C, ${m.maxBpk.toFixed(2)}T)`, opX + (opX > w - 120 ? -10 : 10), opY - 6);
+    }
+
+    // 3. Lunar Diurnal Ambient vs Core Temp Chart
+    function drawTempProfile(m) {
+      const canvas = document.getElementById('tempProfileCanvas');
+      if (!canvas) return;
+      const { ctx, w, h } = prepCanvas(canvas);
+      ctx.clearRect(0, 0, w, h);
+
+      const pad = { l: 38, r: 14, t: 14, b: 24 };
+      const cw = w - pad.l - pad.r;
+      const ch = h - pad.t - pad.b;
+
+      const xMap = idx => pad.l + (idx / 24) * cw;
+      const yMap = t => pad.t + ch - ((t + 60) / 220) * ch;
+
+      // Grid
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#64748b';
+      [-50, 50, 150].forEach(t => {
+        const y = yMap(t);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+        ctx.textAlign = 'right';
+        ctx.fillText(`${t}°`, pad.l - 4, y + 3);
+      });
+
+      // Simulated lunar day curve
+      ctx.beginPath();
+      for (let i = 0; i <= 24; i++) {
+        const amb = -50 + 180 * Math.sin((i / 24) * Math.PI);
+        const x = xMap(i);
+        const y = yMap(amb);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Core temp curve
+      const deltaT = m.tCore - state.tAmb;
+      ctx.beginPath();
+      for (let i = 0; i <= 24; i++) {
+        const amb = -50 + 180 * Math.sin((i / 24) * Math.PI);
+        const x = xMap(i);
+        const y = yMap(amb + deltaT);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 4. Peak Leg Flux Comparison Bar Chart (Open-Loop vs MagCoreSat Guard)
+    function drawFluxShift(m) {
+      const canvas = document.getElementById('fluxShiftCanvas');
+      if (!canvas) return;
+      const { ctx, w, h } = prepCanvas(canvas);
+      ctx.clearRect(0, 0, w, h);
+
+      const pad = { l: 42, r: 16, t: 16, b: 26 };
+      const cw = w - pad.l - pad.r;
+      const ch = h - pad.t - pad.b;
+      const bMax = 0.45;
+      const yMap = b => pad.t + ch - (Math.min(bMax, b) / bMax) * ch;
+
+      // B_sat limit dashed line
+      const satY = yMap(m.bSat);
+      ctx.strokeStyle = '#fb7185';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(pad.l, satY); ctx.lineTo(w - pad.r, satY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#fb7185';
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`B_sat: ${m.bSat.toFixed(2)}T`, w - pad.r, satY - 4);
+
+      const labels = ['Leg A', 'Leg B', 'Leg C'];
+      const barW = cw / 6;
+
+      for (let i = 0; i < 3; i++) {
+        const cx = pad.l + (cw / 3) * (i + 0.5);
+        const bVal = m.legBpk[i];
+        const barTop = yMap(bVal);
+        const barH = (pad.t + ch) - barTop;
+
+        ctx.fillStyle = bVal > m.bSat * 0.9 ? '#fb7185' : '#38bdf8';
+        ctx.beginPath();
+        ctx.roundRect(cx - barW / 2, barTop, barW, barH, [4, 4, 0, 0]);
+        ctx.fill();
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.textAlign = 'center';
+        ctx.fillText(labels[i], cx, h - 8);
+        ctx.fillText(`${bVal.toFixed(2)}T`, cx, barTop - 4);
+      }
+    }
+
+    // Event Listeners
+    sliderTemp.addEventListener('input', e => { state.tAmb = parseFloat(e.target.value); updateUI(); });
+    sliderPower.addEventListener('input', e => { state.pOut = parseFloat(e.target.value); updateUI(); });
+    sliderFreq.addEventListener('input', e => { state.fSw = parseFloat(e.target.value); updateUI(); });
+
+    toggleGuardBtn.addEventListener('click', () => {
+      state.guardActive = !state.guardActive;
+      updateUI();
+    });
+
+    document.getElementById('btn-scenario-noon').addEventListener('click', () => {
+      state.tAmb = 120; state.pOut = 48; state.fSw = 250;
+      state.imbalanceInjected = false; state.guardActive = true;
+      sliderTemp.value = 120; sliderPower.value = 48; sliderFreq.value = 250;
+      updateUI();
+    });
+
+    document.getElementById('btn-scenario-imbalance').addEventListener('click', () => {
+      state.tAmb = 120; state.pOut = 54; state.fSw = 250;
+      state.imbalanceInjected = true;
+      sliderTemp.value = 120; sliderPower.value = 54; sliderFreq.value = 250;
+      updateUI();
+    });
+
+    document.getElementById('btn-scenario-surge').addEventListener('click', () => {
+      state.tAmb = 135; state.pOut = 72; state.fSw = 220;
+      state.imbalanceInjected = true;
+      sliderTemp.value = 135; sliderPower.value = 72; sliderFreq.value = 220;
+      updateUI();
+    });
+
+    window.addEventListener('resize', updateUI);
+
+    window.onload = function () {
+      updateUI();
+      drawCoreAnimation();
+    };
+  </script>
+</body>
+</html>
